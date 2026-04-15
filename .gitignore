@@ -42,7 +42,4 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Local configuration
-/web/config.json
-/web/env-config.js
 
