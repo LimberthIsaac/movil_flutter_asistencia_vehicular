@@ -44,4 +44,5 @@ app.*.map.json
 
 # Local configuration
 /web/config.json
+/web/env-config.js
 

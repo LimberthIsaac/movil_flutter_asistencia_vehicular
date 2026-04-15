@@ -33,20 +33,13 @@
   <title>app_cliente</title>
   <link rel="manifest" href="manifest.json">
 
-  <!-- Configuración de Google Maps para Web (Carga Dinámica) -->
+  <script src="env-config.js"></script>
   <script>
-    fetch('config.json')
-      .then(response => response.json())
-      .then(config => {
-        if (config.googleMapsApiKey) {
-          const script = document.createElement('script');
-          script.src = `https://maps.googleapis.com/maps/api/js?key=${config.googleMapsApiKey}`;
-          script.async = true;
-          script.defer = true;
-          document.head.appendChild(script);
-        }
-      })
-      .catch(err => console.error('Error cargando configuración de Google Maps:', err));
+    if (window.GOOGLE_MAPS_API_KEY) {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${window.GOOGLE_MAPS_API_KEY}`;
+      document.head.appendChild(script);
+    }
   </script>
 </head>
 
