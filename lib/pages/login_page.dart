@@ -38,17 +38,10 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
             children: [
               const SizedBox(height: 60),
               // Car Icon Header
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryBlue.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.directions_car_filled_rounded,
-                  color: AppTheme.primaryBlue,
-                  size: 40,
-                ),
+              Image.asset(
+                'assets/images/logo.png',
+                height: 100,
+                fit: BoxFit.contain,
               ),
               const SizedBox(height: 24),
               Text(
