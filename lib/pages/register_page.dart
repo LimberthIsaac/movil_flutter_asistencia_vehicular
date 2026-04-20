@@ -25,22 +25,22 @@ class _RegisterPageState extends State<RegisterPage> {
       backgroundColor: AppTheme.bgLight,
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          icon: const Icon(Icons.arrow_back_rounded, size: 24),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          "Crea tu cuenta",
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 20),
+          "Crear Cuenta",
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18),
         ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
-                "Únete a AsistAuto",
+                "Únete a nosotros",
                 style: GoogleFonts.outfit(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -51,55 +51,69 @@ class _RegisterPageState extends State<RegisterPage> {
               Text(
                 "Obtén asistencia vial inteligente en segundos.",
                 style: GoogleFonts.inter(
-                  fontSize: 16,
+                  fontSize: 14,
                   color: AppTheme.textGray,
                 ),
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 40),
               
-              _buildLabel("Nombres y Apellidos"),
               TextField(
                 controller: _nameController,
                 decoration: const InputDecoration(
-                  hintText: "Escribe tu nombre completo",
+                  hintText: "Nombre Completo",
                   prefixIcon: Icon(Icons.person_outline_rounded, color: AppTheme.textGray, size: 20),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               
-              _buildLabel("Correo electrónico"),
               TextField(
                 controller: _emailController,
                 decoration: const InputDecoration(
-                  hintText: "tu@email.com",
+                  hintText: "Correo Electrónico",
                   prefixIcon: Icon(Icons.email_outlined, color: AppTheme.textGray, size: 20),
                 ),
                 keyboardType: TextInputType.emailAddress,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               
-              _buildLabel("Teléfono de contacto"),
               TextField(
                 controller: _phoneController,
                 decoration: const InputDecoration(
-                  hintText: "Ej: +591 70000000",
+                  hintText: "Teléfono",
                   prefixIcon: Icon(Icons.phone_outlined, color: AppTheme.textGray, size: 20),
                 ),
                 keyboardType: TextInputType.phone,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               
-              _buildLabel("Contraseña"),
+              const TextField(
+                decoration: InputDecoration(
+                  hintText: "Dirección",
+                  prefixIcon: Icon(Icons.location_on_outlined, color: AppTheme.textGray, size: 20),
+                ),
+              ),
+              const SizedBox(height: 16),
+              
               TextField(
                 controller: _passwordController,
                 decoration: const InputDecoration(
-                  hintText: "Crea una contraseña segura",
+                  hintText: "Contraseña",
                   prefixIcon: Icon(Icons.lock_outline_rounded, color: AppTheme.textGray, size: 20),
                 ),
                 obscureText: true,
               ),
+              const SizedBox(height: 16),
               
-              const SizedBox(height: 48),
+              const TextField(
+                decoration: InputDecoration(
+                  hintText: "Confirmar Contraseña",
+                  prefixIcon: Icon(Icons.lock_reset_rounded, color: AppTheme.textGray, size: 20),
+                ),
+                obscureText: true,
+              ),
+              
+              const SizedBox(height: 40),
               
               if (authProvider.isLoading)
                 const Center(child: CircularProgressIndicator(color: AppTheme.primaryBlue))
@@ -141,24 +155,11 @@ class _RegisterPageState extends State<RegisterPage> {
                       }
                     }
                   },
-                  child: const Text("Registrarme ahora"),
+                  child: const Text("Registrarse"),
                 ),
               const SizedBox(height: 40),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLabel(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Text(
-        text,
-        style: GoogleFonts.outfit(
-          fontWeight: FontWeight.w600,
-          color: AppTheme.textDark,
         ),
       ),
     );

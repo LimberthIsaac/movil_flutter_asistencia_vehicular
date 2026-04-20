@@ -53,7 +53,7 @@ class _RatingPageState extends State<RatingPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              "Tu opinión es muy importante para nosotros. ¿Cómo calificarías el trabajo del mecánico?",
+              "Califica el servicio que recibiste y ayuda a mejorar a nuestra comunidad.",
               style: GoogleFonts.inter(
                 fontSize: 16,
                 color: AppTheme.textGray,
@@ -73,7 +73,7 @@ class _RatingPageState extends State<RatingPage> {
                     padding: const EdgeInsets.symmetric(horizontal: 4.0),
                     child: Icon(
                       index < _rating ? Icons.star_rounded : Icons.star_outline_rounded,
-                      color: index < _rating ? AppTheme.accentYellow : Colors.grey.shade300,
+                      color: index < _rating ? AppTheme.secondaryGreen : Colors.grey.shade300,
                       size: 48,
                     ),
                   ),
@@ -104,7 +104,7 @@ class _RatingPageState extends State<RatingPage> {
                 filled: true,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: Colors.grey.shade200),
+                  borderSide: BorderSide.none,
                 ),
               ),
             ),
@@ -148,7 +148,7 @@ class _RatingPageState extends State<RatingPage> {
             ),
             const SizedBox(height: 12),
             const Text(
-              "Tu calificación ha sido enviada correctamente.",
+              "Tu opinión ayuda a otros a encontrar los mejores talleres en AsistAuto.",
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),

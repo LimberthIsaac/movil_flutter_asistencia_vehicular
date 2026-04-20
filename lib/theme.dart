@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  static const Color primaryBlue = Color(0xFF0066FF);
+  static const Color primaryBlue = Color(0xFF007BFF); // Azul vibrante
   static const Color secondaryGreen = Color(0xFF10B981);
-  static const Color emergencyRed = Color(0xFFFF0000);
-  static const Color bgLight = Color(0xFFF8FAFC);
+  static const Color emergencyRed = Color(0xFFFF3B30); // Rojo iOS sutil
+  static const Color bgLight = Color(0xFFF4F6FB); // Gris claro de fondo
   static const Color surfaceWhite = Colors.white;
-  static const Color textDark = Color(0xFF1E293B);
-  static const Color textGray = Color(0xFF64748B);
-  static const Color accentYellow = Color(0xFFFACC15);
+  static const Color textDark = Color(0xFF1C1C1E);
+  static const Color textGray = Color(0xFF8E8E93);
+  static const Color accentYellow = Color(0xFFFFCC00);
 
   static ThemeData get lightTheme {
     return ThemeData(
@@ -37,7 +37,7 @@ class AppTheme {
           minimumSize: const Size(double.infinity, 56),
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(24),
           ),
           textStyle: GoogleFonts.outfit(
             fontSize: 18,
@@ -51,11 +51,11 @@ class AppTheme {
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.grey.shade200),
+          borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.grey.shade200),
+          borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),

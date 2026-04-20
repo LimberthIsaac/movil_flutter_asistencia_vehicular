@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:geolocator/geolocator.dart';
 import '../theme.dart';
 
 class RequestAssistancePage extends StatefulWidget {
@@ -10,18 +11,31 @@ class RequestAssistancePage extends StatefulWidget {
 }
 
 class _RequestAssistancePageState extends State<RequestAssistancePage> {
-  String? _selectedService;
-  String? _selectedUrgency = 'Media - Urgente';
+  final _descriptionController = TextEditingController();
+  String _locationStatus = "Obteniendo ubicación...";
 
-  final List<Map<String, dynamic>> _services = [
-    {'name': 'Mecánica General', 'color': const Color(0xFFDBEAFE), 'textColor': const Color(0xFF1E40AF)},
-    {'name': 'Autoeléctrica', 'color': const Color(0xFFFEF3C7), 'textColor': const Color(0xFF92400E)},
-    {'name': 'Parchado y Llantas', 'color': const Color(0xFFF3E8FF), 'textColor': const Color(0xFF6B21A8)},
-    {'name': 'Grúa', 'color': const Color(0xFFFEE2E2), 'textColor': const Color(0xFF991B1B)},
-    {'name': 'Baterías', 'color': const Color(0xFFDCFCE7), 'textColor': const Color(0xFF166534)},
-    {'name': 'Diagnóstico Electrónico', 'color': const Color(0xFFE0E7FF), 'textColor': const Color(0xFF3730A3)},
-    {'name': 'Cerrajería Automotriz', 'color': const Color(0xFFFFEDD5), 'textColor': const Color(0xFF9A3412)},
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _getCurrentLocation();
+  }
+
+  Future<void> _getCurrentLocation() async {
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+      if (mounted) {
+        setState(() {
+          _locationStatus = "Ubicación capturada: ${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)}";
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _locationStatus = "Error al capturar ubicación.");
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +47,7 @@ class _RequestAssistancePageState extends State<RequestAssistancePage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          "Solicitar asistencia",
+          "Solicitar Auxilio",
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 20),
         ),
       ),
@@ -52,18 +66,18 @@ class _RequestAssistancePageState extends State<RequestAssistancePage> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline_rounded, color: AppTheme.primaryBlue),
+                  const Icon(Icons.auto_awesome_rounded, color: AppTheme.primaryBlue),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Asistencia de emergencia",
+                          "Diagnóstico Inteligente",
                           style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: AppTheme.textDark),
                         ),
                         Text(
-                          "Completa el formulario y te conectaremos con el taller más cercano en minutos",
+                          "Sube evidencias del problema. Nuestra IA analizará la situación y encontrará al especialista adecuado en segundos.",
                           style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textGray),
                         ),
                       ],
@@ -75,77 +89,109 @@ class _RequestAssistancePageState extends State<RequestAssistancePage> {
             const SizedBox(height: 32),
             
             Text(
-              "¿Qué tipo de servicio necesitas?*",
+              "Audio (Opcional pero recomendado)",
               style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textDark),
             ),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _services.map((service) {
-                final isSelected = _selectedService == service['name'];
-                return ChoiceChip(
-                  label: Text(service['name']),
-                  selected: isSelected,
-                  onSelected: (selected) {
-                    setState(() => _selectedService = selected ? service['name'] : null);
-                  },
-                  backgroundColor: service['color'],
-                  selectedColor: service['textColor'],
-                  labelStyle: TextStyle(
-                    color: isSelected ? Colors.white : service['textColor'],
-                    fontWeight: FontWeight.bold,
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryBlue.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.mic_rounded, color: AppTheme.primaryBlue, size: 32),
                   ),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  side: BorderSide.none,
-                  showCheckmark: false,
-                );
-              }).toList(),
+                  const SizedBox(height: 12),
+                  Text("Mantén presionado para hablar", style: GoogleFonts.inter(color: AppTheme.textGray, fontSize: 13)),
+                ],
+              ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
             
             Text(
-              "Nivel de urgencia*",
+              "Fotos de la alerta o avería",
               style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textDark),
             ),
-            const SizedBox(height: 16),
-            _buildUrgencyOption("Alta - Emergencia", "El vehículo está detenido o en situación peligrosa", AppTheme.emergencyRed),
-            _buildUrgencyOption("Media - Urgente", "Necesito asistencia pronto pero no es crítico", AppTheme.accentYellow),
-            _buildUrgencyOption("Baja - Programada", "Puedo esperar, no es urgente", AppTheme.secondaryGreen),
-            
-            const SizedBox(height: 32),
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              decoration: BoxDecoration(
+                color: AppTheme.accentYellow.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppTheme.accentYellow.withOpacity(0.3), style: BorderStyle.solid),
+              ),
+              child: Column(
+                children: [
+                  const Icon(Icons.add_a_photo_rounded, color: AppTheme.accentYellow, size: 32),
+                  const SizedBox(height: 12),
+                  Text("Toma una foto de la falla", style: GoogleFonts.inter(color: AppTheme.accentYellow, fontSize: 13, fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
             
             Text(
-              "Evidencia (Opcional)",
+              "Descripción breve",
               style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textDark),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _descriptionController,
+              maxLines: 3,
+              decoration: InputDecoration(
+                hintText: "Ej. Mi auto no enciende frente al parque...",
+                fillColor: Colors.white,
+                filled: true,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 24),
             Row(
               children: [
-                _buildEvidenceButton(Icons.mic_rounded, "Audio", Colors.blue),
-                const SizedBox(width: 12),
-                _buildEvidenceButton(Icons.camera_alt_rounded, "Fotos", Colors.orange),
-                const SizedBox(width: 12),
-                _buildEvidenceButton(Icons.edit_note_rounded, "Texto", Colors.green),
+                const Icon(Icons.my_location_rounded, color: AppTheme.secondaryGreen, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    _locationStatus,
+                    style: GoogleFonts.inter(color: AppTheme.secondaryGreen, fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                ),
               ],
             ),
             
             const SizedBox(height: 48),
             ElevatedButton(
               onPressed: () {
-                // Simular envío
-                Navigator.pushNamed(context, '/tracking');
+                Navigator.pushReplacementNamed(context, '/searching');
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryBlue,
                 minimumSize: const Size(double.infinity, 60),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                elevation: 10,
+                shadowColor: AppTheme.primaryBlue.withOpacity(0.5),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(Icons.send_rounded, size: 20),
                   const SizedBox(width: 12),
-                  Text("Enviar solicitud de asistencia", style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                  Text("¡Pedir Auxilio Ahora!", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18)),
                 ],
               ),
             ),
@@ -155,68 +201,5 @@ class _RequestAssistancePageState extends State<RequestAssistancePage> {
       ),
     );
   }
-
-  Widget _buildUrgencyOption(String title, String subtitle, Color color) {
-    final isSelected = _selectedUrgency == title;
-    return GestureDetector(
-      onTap: () => setState(() => _selectedUrgency = title),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected ? color : Colors.grey.shade200,
-            width: isSelected ? 2 : 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: color, width: 2),
-              ),
-              child: isSelected 
-                ? Center(child: Container(width: 10, height: 10, decoration: BoxDecoration(shape: BoxShape.circle, color: color)))
-                : null,
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: AppTheme.textDark)),
-                  Text(subtitle, style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textGray)),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEvidenceButton(IconData icon, String label, Color color) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.1)),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color),
-            const SizedBox(height: 4),
-            Text(label, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: color)),
-          ],
-        ),
-      ),
-    );
-  }
 }
+

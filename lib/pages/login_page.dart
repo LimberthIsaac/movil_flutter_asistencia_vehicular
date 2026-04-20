@@ -104,7 +104,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                     alignment: Alignment.centerLeft,
                     child: TextButton(
                       onPressed: () {
-                        _showForgotPasswordDialog(context);
+                        Navigator.pushNamed(context, '/forgot_password');
                       },
                       child: const Text(
                         "¿Olvidaste tu contraseña?",
@@ -177,29 +177,4 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     );
   }
 
-  void _showForgotPasswordDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Recuperar Contraseña"),
-        content: const Text("Se te enviará un correo con instrucciones para restablecer tu cuenta."),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cerrar"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Correo enviado."))
-              );
-            },
-            style: ElevatedButton.styleFrom(minimumSize: const Size(100, 40)),
-            child: const Text("Enviar"),
-          ),
-        ],
-      ),
-    );
-  }
 }
