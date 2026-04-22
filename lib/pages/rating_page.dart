@@ -20,7 +20,7 @@ class _RatingPageState extends State<RatingPage> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.close, size: 24),
-          onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false),
+          onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/main', (route) => false),
         ),
       ),
       body: SingleChildScrollView(
@@ -154,7 +154,7 @@ class _RatingPageState extends State<RatingPage> {
             const SizedBox(height: 32),
             ElevatedButton(
               onPressed: () {
-                Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+                Navigator.pushNamedAndRemoveUntil(context, '/main', (route) => false);
               },
               child: const Text("Volver al inicio"),
             ),
