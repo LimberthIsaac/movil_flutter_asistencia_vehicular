@@ -53,6 +53,8 @@ class AuthProvider with ChangeNotifier {
 
   Future<bool> register({
     required String name,
+    required String lastName,
+    required String ciDni,
     required String email,
     required String password,
     required String phone,
@@ -61,14 +63,10 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      // Separamos el nombre completo (simplificado)
-      final names = name.split(' ');
-      final nombres = names.isNotEmpty ? names[0] : name;
-      final apellidos = names.length > 1 ? names.sublist(1).join(' ') : "";
-
       final response = await _apiService.registerCliente(
-        nombres: nombres,
-        apellidos: apellidos,
+        nombres: name,
+        apellidos: lastName,
+        ciDni: ciDni,
         telefono: phone,
         correo: email,
         password: password,

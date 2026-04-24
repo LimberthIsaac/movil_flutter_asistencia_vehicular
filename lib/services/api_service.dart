@@ -21,6 +21,7 @@ class ApiService {
   Future<Response> registerCliente({
     required String nombres,
     required String apellidos,
+    required String ciDni,
     required String telefono,
     required String correo,
     required String password,
@@ -28,6 +29,7 @@ class ApiService {
     return await _dio.post('/api/clientes/', data: {
       'nombres': nombres,
       'apellidos': apellidos,
+      'ci_dni': ciDni,
       'telefono': telefono,
       'correo': correo,
       'password': password,

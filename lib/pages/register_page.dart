@@ -13,6 +13,8 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final _nameController = TextEditingController();
+  final _lastNameController = TextEditingController();
+  final _ciController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -61,9 +63,28 @@ class _RegisterPageState extends State<RegisterPage> {
               TextField(
                 controller: _nameController,
                 decoration: const InputDecoration(
-                  hintText: "Nombre Completo",
+                  hintText: "Nombres",
                   prefixIcon: Icon(Icons.person_outline_rounded, color: AppTheme.textGray, size: 20),
                 ),
+              ),
+              const SizedBox(height: 16),
+
+              TextField(
+                controller: _lastNameController,
+                decoration: const InputDecoration(
+                  hintText: "Apellidos",
+                  prefixIcon: Icon(Icons.person_outline_rounded, color: AppTheme.textGray, size: 20),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              TextField(
+                controller: _ciController,
+                decoration: const InputDecoration(
+                  hintText: "Carnet de Identidad (CI/DNI)",
+                  prefixIcon: Icon(Icons.badge_outlined, color: AppTheme.textGray, size: 20),
+                ),
+                keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 16),
               
@@ -87,14 +108,6 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
               const SizedBox(height: 16),
               
-              const TextField(
-                decoration: InputDecoration(
-                  hintText: "Dirección",
-                  prefixIcon: Icon(Icons.location_on_outlined, color: AppTheme.textGray, size: 20),
-                ),
-              ),
-              const SizedBox(height: 16),
-              
               TextField(
                 controller: _passwordController,
                 decoration: const InputDecoration(
@@ -103,16 +116,6 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 obscureText: true,
               ),
-              const SizedBox(height: 16),
-              
-              const TextField(
-                decoration: InputDecoration(
-                  hintText: "Confirmar Contraseña",
-                  prefixIcon: Icon(Icons.lock_reset_rounded, color: AppTheme.textGray, size: 20),
-                ),
-                obscureText: true,
-              ),
-              
               const SizedBox(height: 40),
               
               if (authProvider.isLoading)
@@ -120,7 +123,10 @@ class _RegisterPageState extends State<RegisterPage> {
               else
                 ElevatedButton(
                   onPressed: () async {
-                    if (_nameController.text.isEmpty || _emailController.text.isEmpty) {
+                    if (_nameController.text.isEmpty || 
+                        _lastNameController.text.isEmpty ||
+                        _ciController.text.isEmpty ||
+                        _emailController.text.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text("Por favor, completa los campos obligatorios"))
                       );
@@ -129,6 +135,8 @@ class _RegisterPageState extends State<RegisterPage> {
 
                     final success = await authProvider.register(
                       name: _nameController.text,
+                      lastName: _lastNameController.text,
+                      ciDni: _ciController.text,
                       email: _emailController.text,
                       phone: _phoneController.text,
                       password: _passwordController.text,
