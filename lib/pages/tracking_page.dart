@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
+import 'dart:convert';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/api_service.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import '../theme.dart';
@@ -13,13 +16,107 @@ class TrackingPage extends StatefulWidget {
 
 class _TrackingPageState extends State<TrackingPage> {
   GoogleMapController? _mapController;
-  LatLng _currentPosition = const LatLng(-17.7833, -63.1821); // Posición por defecto (Santa Cruz)
+  LatLng _currentPosition = const LatLng(-17.7833, -63.1821); 
+  LatLng _technicianPosition = const LatLng(-17.7780, -63.1750); 
   bool _loadingLocation = true;
+  final Set<Marker> _markers = {};
+  final Set<Polyline> _polylines = {};
+
+  Timer? _pollingTimer;
+  int? _idIncidente;
+  bool _argsLoaded = false;
+  String _estadoSolicitud = "Aceptado";
+  final ApiService _apiService = ApiService();
 
   @override
   void initState() {
     super.initState();
     _getUserLocation();
+    _loadTrackData();
+    _startTechnicianPolling();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_argsLoaded) {
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      if (args != null) {
+        _idIncidente = args['id_incidente'];
+      }
+      _argsLoaded = true;
+    }
+  }
+
+  @override
+  void dispose() {
+    _pollingTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startTechnicianPolling() {
+    _pollingTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      _fetchTechnicianLocation();
+    });
+  }
+
+  Future<void> _fetchTechnicianLocation() async {
+    if (_idIncidente != null) {
+      try {
+        final response = await _apiService.getIncidenteTracking(_idIncidente!);
+        if (response.statusCode == 200) {
+          final data = response.data;
+          if (mounted) {
+            setState(() {
+              _estadoSolicitud = data['estado'] ?? 'Aceptado';
+              _currentPosition = LatLng(
+                data['lat_cliente'] ?? _currentPosition.latitude,
+                data['lng_cliente'] ?? _currentPosition.longitude,
+              );
+              _technicianPosition = LatLng(
+                data['lat_tecnico'] ?? _technicianPosition.latitude,
+                data['lng_tecnico'] ?? _technicianPosition.longitude,
+              );
+            });
+            _loadTrackData();
+          }
+        }
+      } catch (e) {
+        debugPrint("Error consultando tracking del incidente: $e");
+      }
+    }
+  }
+
+  void _loadTrackData() {
+    // Marcador del Cliente
+    _markers.add(
+      Marker(
+        markerId: const MarkerId('client'),
+        position: _currentPosition,
+        infoWindow: const InfoWindow(title: 'Tu ubicación'),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+      ),
+    );
+
+    // Marcador del Técnico
+    _markers.add(
+      Marker(
+        markerId: const MarkerId('technician'),
+        position: _technicianPosition,
+        infoWindow: const InfoWindow(title: 'Técnico en camino'),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+      ),
+    );
+
+    // Trazar línea de ruta recta (Fallback por si no hay API de Routes activada)
+    _polylines.add(
+      Polyline(
+        polylineId: const PolylineId('route'),
+        points: [_currentPosition, _technicianPosition],
+        color: AppTheme.primaryBlue,
+        width: 5,
+      ),
+    );
   }
 
   Future<void> _getUserLocation() async {
@@ -32,6 +129,7 @@ class _TrackingPageState extends State<TrackingPage> {
           _currentPosition = LatLng(position.latitude, position.longitude);
           _loadingLocation = false;
         });
+        _loadTrackData();
         _mapController?.animateCamera(
           CameraUpdate.newLatLngZoom(_currentPosition, 15),
         );
@@ -60,6 +158,8 @@ class _TrackingPageState extends State<TrackingPage> {
               myLocationEnabled: true,
               myLocationButtonEnabled: false,
               zoomControlsEnabled: false,
+              markers: _markers,
+              polylines: _polylines,
               onMapCreated: (controller) {
                 _mapController = controller;
                 if (!_loadingLocation) {
@@ -185,10 +285,10 @@ class _TrackingPageState extends State<TrackingPage> {
                           const SizedBox(height: 32),
                           
                           _buildStep(Icons.check_rounded, "Buscando taller", true, true, false),
-                          _buildStep(Icons.check_rounded, "Taller asignado", true, true, false),
-                          _buildStep(Icons.check_rounded, "En camino", true, true, false),
-                          _buildStep(Icons.build_circle_rounded, "En atención", true, true, true),
-                          _buildStep(Icons.star_rounded, "Finalizada", false, false, false),
+                          _buildStep(Icons.check_rounded, "Taller asignado", _estadoSolicitud == 'Aceptado' || _estadoSolicitud == 'En Camino' || _estadoSolicitud == 'Atendido' || _estadoSolicitud == 'Completado', true, false),
+                          _buildStep(Icons.check_rounded, "En camino", _estadoSolicitud == 'En Camino' || _estadoSolicitud == 'Atendido' || _estadoSolicitud == 'Completado', _estadoSolicitud == 'En Camino', false),
+                          _buildStep(Icons.build_circle_rounded, "En atención", _estadoSolicitud == 'Atendido' || _estadoSolicitud == 'Completado', _estadoSolicitud == 'Atendido', _estadoSolicitud == 'Atendido'),
+                          _buildStep(Icons.star_rounded, "Finalizada", _estadoSolicitud == 'Completado', _estadoSolicitud == 'Completado', _estadoSolicitud == 'Completado'),
                         ],
                       ),
                     ),
@@ -234,17 +334,27 @@ class _TrackingPageState extends State<TrackingPage> {
                           ),
                           const SizedBox(height: 24),
                           ElevatedButton(
-                            onPressed: () {
-                              Navigator.pushReplacementNamed(context, '/checkout');
-                            },
+                            onPressed: (_estadoSolicitud == 'Atendido' || _estadoSolicitud == 'Completado') 
+                              ? () => Navigator.pushReplacementNamed(
+                                  context, 
+                                  '/checkout', 
+                                  arguments: {'id_incidente': _idIncidente},
+                                )
+                              : null,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
-                              foregroundColor: AppTheme.primaryBlue,
+                              backgroundColor: (_estadoSolicitud == 'Atendido' || _estadoSolicitud == 'Completado') 
+                                ? AppTheme.primaryBlue 
+                                : Colors.grey.shade200,
+                              foregroundColor: (_estadoSolicitud == 'Atendido' || _estadoSolicitud == 'Completado') 
+                                ? Colors.white 
+                                : Colors.grey.shade500,
                               elevation: 0,
                               minimumSize: const Size(double.infinity, 50),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                             ),
-                            child: const Text("Ver perfil del taller"),
+                            child: Text((_estadoSolicitud == 'Atendido' || _estadoSolicitud == 'Completado') 
+                              ? "Proceder al Pago (\$50.00)" 
+                              : "Esperando asistencia..."),
                           ),
                         ],
                       ),

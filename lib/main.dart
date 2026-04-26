@@ -12,9 +12,23 @@ import 'pages/searching_workshop_page.dart';
 import 'pages/tracking_page.dart';
 import 'pages/checkout_page.dart';
 import 'pages/rating_page.dart';
+import 'pages/mechanic_main_screen.dart';
+import 'pages/mechanic_home_page.dart';
+import 'pages/mechanic_job_details_page.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'theme.dart';
 
-void main() {
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  print("Manejando mensaje en segundo plano: ${message.messageId}");
+}
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   runApp(const MyApp());
 }
 
@@ -44,6 +58,13 @@ class MyApp extends StatelessWidget {
           '/tracking': (context) => const TrackingPage(),
           '/checkout': (context) => const CheckoutPage(),
           '/rating': (context) => const RatingPage(),
+          '/mechanic_home': (context) {
+            final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+            final idTecnico = args?['id_tecnico'] ?? 1;
+            return MechanicHomePage(idTecnico: idTecnico);
+          },
+          '/mechanic_main': (context) => const MechanicMainScreen(),
+          '/mechanic_job_details': (context) => const MechanicJobDetailsPage(),
         },
       ),
     );

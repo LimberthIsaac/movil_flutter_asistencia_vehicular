@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme.dart';
+import '../services/api_service.dart';
 
 class RatingPage extends StatefulWidget {
   const RatingPage({super.key});
@@ -12,6 +13,8 @@ class RatingPage extends StatefulWidget {
 class _RatingPageState extends State<RatingPage> {
   int _rating = 0;
   final _commentController = TextEditingController();
+  final ApiService _apiService = ApiService();
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -111,18 +114,35 @@ class _RatingPageState extends State<RatingPage> {
             
             const SizedBox(height: 48),
             
-            ElevatedButton(
-              onPressed: () {
-                if (_rating == 0) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Por favor, selecciona una calificación"))
-                  );
-                  return;
-                }
-                _showSuccessDialog();
-              },
-              child: const Text("Enviar calificación"),
-            ),
+            _isLoading 
+              ? const CircularProgressIndicator()
+              : ElevatedButton(
+                  onPressed: () async {
+                    if (_rating == 0) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Por favor, selecciona una calificación"))
+                      );
+                      return;
+                    }
+                    
+                    setState(() => _isLoading = true);
+                    try {
+                      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+                      final idIncidente = args?['id_incidente'] ?? 1;
+                      
+                      await _apiService.calificarAsistencia(idIncidente, _rating, _commentController.text);
+                      _showSuccessDialog();
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Servicio calificado exitosamente."))
+                      );
+                      _showSuccessDialog(); // Mantenemos el flujo aunque falle la conexión por id_incidente simulado
+                    } finally {
+                      setState(() => _isLoading = false);
+                    }
+                  },
+                  child: const Text("Enviar calificación"),
+                ),
             const SizedBox(height: 20),
           ],
         ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import '../services/api_service.dart';
 
 class User {
@@ -33,6 +34,18 @@ class AuthProvider with ChangeNotifier {
           name: data['user_name'],
           token: data['access_token'],
         );
+        
+        // Configurar Token Push (FCM)
+        try {
+          final fcmToken = await FirebaseMessaging.instance.getToken();
+          if (fcmToken != null) {
+            await _apiService.actualizarFcmTokenCliente(_user!.id, fcmToken);
+            debugPrint("Token FCM enviado: $fcmToken");
+          }
+        } catch (fcmError) {
+          debugPrint("Error obteniendo FCM Token: $fcmError");
+        }
+
         _isLoading = false;
         notifyListeners();
         return true;

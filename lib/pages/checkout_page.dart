@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import '../theme.dart';
 
 class CheckoutPage extends StatefulWidget {
@@ -15,10 +17,49 @@ class _CheckoutPageState extends State<CheckoutPage> {
   final _cvc = TextEditingController();
 
   bool _isProcessing = false;
+  bool _argsLoaded = false;
+  int? _idIncidente;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_argsLoaded) {
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      if (args != null) {
+        _idIncidente = args['id_incidente'];
+      }
+      _argsLoaded = true;
+    }
+  }
 
   void _processPayment() async {
+    if (_cardNumber.text.trim().length < 16 || 
+        _expiryDate.text.trim().isEmpty || 
+        _cvc.text.trim().length < 3) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Por favor, ingresa datos de tarjeta válidos."),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isProcessing = true);
-    // Simular el tiempo de respuesta de Stripe
+    
+    try {
+      await http.post(
+        Uri.parse('http://10.0.2.2:8000/api/pagos/crear-intento'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'id_incidente': _idIncidente ?? 1,
+          'monto': 5000
+        }),
+      );
+    } catch (e) {
+      debugPrint("Error registrando pago: $e");
+    }
+
     await Future.delayed(const Duration(seconds: 3));
     if (mounted) {
       setState(() => _isProcessing = false);
@@ -28,7 +69,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
           backgroundColor: AppTheme.secondaryGreen,
         ),
       );
-      Navigator.pushReplacementNamed(context, '/rating');
+      Navigator.pushReplacementNamed(
+        context, 
+        '/rating',
+        arguments: {'id_incidente': _idIncidente ?? 1},
+      );
     }
   }
 

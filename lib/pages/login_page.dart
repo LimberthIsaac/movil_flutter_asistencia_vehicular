@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/auth_provider.dart';
+import '../services/api_service.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import '../theme.dart';
 
 class LoginPage extends StatefulWidget {
@@ -14,6 +16,182 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixin {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _apiService = ApiService();
+  String _selectedRole = 'Conductor';
+
+  Widget _buildSlidingToggle() {
+    final isConductor = _selectedRole == 'Conductor';
+    return Container(
+      width: 280,
+      height: 50,
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceWhite,
+        borderRadius: BorderRadius.circular(25),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeInOut,
+            left: isConductor ? 0 : 140,
+            top: 0,
+            bottom: 0,
+            child: Container(
+              width: 140,
+              decoration: BoxDecoration(
+                color: AppTheme.primaryBlue,
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.primaryBlue.withOpacity(0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => _selectedRole = 'Conductor'),
+                  behavior: HitTestBehavior.opaque,
+                  child: Center(
+                    child: Text(
+                      "Conductor",
+                      style: GoogleFonts.outfit(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isConductor ? Colors.white : AppTheme.textDark.withOpacity(0.6),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => _selectedRole = 'Técnico'),
+                  behavior: HitTestBehavior.opaque,
+                  child: Center(
+                    child: Text(
+                      "Técnico",
+                      style: GoogleFonts.outfit(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: !isConductor ? Colors.white : AppTheme.textDark.withOpacity(0.6),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showFirstLoginPasswordDialog(BuildContext context, int idTecnico) {
+    final newPasswordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          "Primer Inicio de Sesión",
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Por seguridad, debes cambiar la contraseña genérica asignada por el taller.",
+              style: GoogleFonts.inter(fontSize: 14, color: AppTheme.textGray),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: newPasswordController,
+              obscureText: true,
+              decoration: InputDecoration(
+                labelText: "Nueva Contraseña",
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: confirmPasswordController,
+              obscureText: true,
+              decoration: InputDecoration(
+                labelText: "Confirmar Contraseña",
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () async {
+              if (newPasswordController.text.isEmpty || confirmPasswordController.text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Completa todos los campos"))
+                );
+                return;
+              }
+              if (newPasswordController.text != confirmPasswordController.text) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Las contraseñas no coinciden"))
+                );
+                return;
+              }
+
+              try {
+                final res = await _apiService.cambiarPasswordTecnico(idTecnico, newPasswordController.text);
+                if (res.statusCode == 200) {
+                  if (dialogContext.mounted) Navigator.pop(dialogContext);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Contraseña actualizada. Bienvenido."),
+                        backgroundColor: AppTheme.secondaryGreen,
+                      )
+                    );
+                    Navigator.pushReplacementNamed(context, '/mechanic_main', arguments: {'id_tecnico': idTecnico});
+                  }
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("Error al cambiar contraseña: $e"),
+                      backgroundColor: AppTheme.emergencyRed,
+                    )
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryBlue,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text("Guardar e Ingresar"),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -53,14 +231,17 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                 ),
               ),
               const SizedBox(height: 8),
+
               Text(
-                "Accede a tu cuenta de Conductor",
+                "Accede a tu cuenta",
                 style: GoogleFonts.inter(
                   fontSize: 16,
                   color: AppTheme.textGray,
                 ),
               ),
-              const SizedBox(height: 48),
+              const SizedBox(height: 24),
+              _buildSlidingToggle(),
+              const SizedBox(height: 32),
               
               // Form Fields
               Column(
@@ -128,6 +309,46 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                       return;
                     }
 
+                    if (_selectedRole == 'Técnico') {
+                      try {
+                        final response = await _apiService.loginTecnico(
+                          _emailController.text,
+                          _passwordController.text,
+                        );
+                        if (response.statusCode == 200) {
+                          final bool esPrimerLogin = response.data['primer_login'] ?? false;
+                          final int idTecnico = response.data['user_id'];
+                          
+                          if (esPrimerLogin && context.mounted) {
+                            _showFirstLoginPasswordDialog(context, idTecnico);
+                          } else if (context.mounted) {
+                            // Configurar Token Push (FCM)
+                            try {
+                              final fcmToken = await FirebaseMessaging.instance.getToken();
+                              if (fcmToken != null) {
+                                await _apiService.actualizarFcmTokenTecnico(idTecnico, fcmToken);
+                                debugPrint("Token FCM Técnico enviado: $fcmToken");
+                              }
+                            } catch (fcmError) {
+                              debugPrint("Error obteniendo FCM Token: $fcmError");
+                            }
+
+                            Navigator.pushReplacementNamed(context, '/mechanic_main', arguments: {'id_tecnico': idTecnico});
+                          }
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Error al iniciar sesión como Técnico. Verifica tus datos."),
+                              backgroundColor: AppTheme.emergencyRed,
+                            ),
+                          );
+                        }
+                      }
+                      return;
+                    }
+
                     final success = await authProvider.login(
                       _emailController.text,
                       _passwordController.text,
@@ -150,25 +371,26 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                   child: const Text("Ingresar"),
                 ),
               const SizedBox(height: 48),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "¿No tienes cuenta? ",
-                    style: GoogleFonts.inter(color: AppTheme.textGray),
-                  ),
-                  GestureDetector(
-                    onTap: () => Navigator.pushNamed(context, '/register'),
-                    child: const Text(
-                      "Regístrate aquí",
-                      style: TextStyle(
-                        color: AppTheme.primaryBlue,
-                        fontWeight: FontWeight.bold,
+              if (_selectedRole == 'Conductor')
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "¿No tienes cuenta? ",
+                      style: GoogleFonts.inter(color: AppTheme.textGray),
+                    ),
+                    GestureDetector(
+                      onTap: () => Navigator.pushNamed(context, '/register'),
+                      child: const Text(
+                        "Regístrate aquí",
+                        style: TextStyle(
+                          color: AppTheme.primaryBlue,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
               const SizedBox(height: 40),
             ],
           ),
